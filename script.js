@@ -22,6 +22,7 @@ const i18n = {
         'btn.manualCrop': '🖐 手动拆分', 
         'btn.reset': '🔄 重置', 
         'btn.downloadAll': '📥 打包下载',
+        'btn.bgRemove': '一键去底',
         'loading': '正在分析画布并拆分素材...',
         
         // 结果
@@ -74,6 +75,7 @@ const i18n = {
         'btn.manualCrop': '🖐 Manual Split', 
         'btn.reset': '🔄 Reset', 
         'btn.downloadAll': '📥 Download All',
+        'btn.bgRemove': 'Remove Background',
         'loading': 'Analyzing and splitting...',
         
         'results.title': 'Results',
@@ -122,6 +124,7 @@ const i18n = {
         'btn.manualCrop': '🖐 手動分割', 
         'btn.reset': '🔄 リセット', 
         'btn.downloadAll': '📥 一括DL',
+        'btn.bgRemove': '背景除去',
         'loading': '解析中...',
         
         'results.title': '分割結果',
@@ -170,6 +173,7 @@ const i18n = {
         'btn.manualCrop': '🖐 수동 분할', 
         'btn.reset': '🔄 초기화', 
         'btn.downloadAll': '📥 전체 다운로드',
+        'btn.bgRemove': '배경 제거',
         'loading': '분석 중...',
         
         'results.title': '분할 결과',
@@ -252,11 +256,48 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.files.length > 0) handleFile(this.files[0]);
     });
 
+    // 下拉菜单交互
+    const cropDropdown = document.getElementById('cropDropdown');
+    const bgRemoveBtn = document.getElementById('bgRemoveBtn');
+    
     // 按钮事件
-    cropBtn.addEventListener('click', smartCrop);
+    cropBtn.addEventListener('click', function(e) {
+        // 执行智能拆分功能
+        smartCrop();
+    });
     manualCropBtn.addEventListener('click', manualCrop);
     resetBtn.addEventListener('click', reset);
     downloadAllBtn.addEventListener('click', downloadAll);
+
+    // 添加鼠标悬停显示下拉菜单的功能
+    cropBtn.parentElement.addEventListener('mouseenter', function() {
+        this.classList.add('show');
+    });
+    
+    cropBtn.parentElement.addEventListener('mouseleave', function() {
+        this.classList.remove('show');
+    });
+    
+    // 点击"一键去底"按钮
+    bgRemoveBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        backgroundRemove();
+        cropDropdown.parentElement.classList.remove('show');
+    });
+    
+    // 点击外部区域关闭下拉菜单
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+        }
+    });
+    
+    // 阻止菜单内点击关闭菜单
+    cropDropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
 });
 
 // 文件处理函数
@@ -400,7 +441,8 @@ function applyI18n() {
         'cropBtn': 'btn.smartCrop',
         'manualCropBtn': 'btn.manualCrop',
         'resetBtn': 'btn.reset',
-        'downloadAllBtn': 'btn.downloadAll'
+        'downloadAllBtn': 'btn.downloadAll',
+        'bgRemoveBtn': 'btn.bgRemove'
     };
     for (let id in btns) {
         const btn = document.getElementById(id);
@@ -540,6 +582,410 @@ function smartCrop() {
         document.getElementById('manualCropBtn').disabled = false;
         document.getElementById('downloadAllBtn').disabled = false;
     }, 50);
+}
+
+// 针对游戏素材的常见背景色列表
+const commonBgColors = [
+    { r: 192, g: 176, b: 144, a: 255 }, // 浅棕色（游戏素材常见背景）
+    { r: 255, g: 255, b: 255, a: 255 }, // 白色
+    { r: 0, g: 0, b: 0, a: 255 },       // 黑色
+    { r: 128, g: 128, b: 128, a: 255 }  // 灰色
+];
+
+// 一键去底功能
+async function backgroundRemove() {
+    const loading = document.getElementById('loading');
+    loading.style.display = 'inline-block';
+    // 禁用按钮防止重复点击
+    toggleButtons(true);
+    
+    try {
+        // 1. 如果还没有拆分图片，先执行智能拆分
+        if (croppedImages.length === 0) {
+            // 这里调用你原本的逻辑生成 croppedImages
+            // 为了代码简洁，假设这里已经有 croppedImages 或者复用 smartCrop 的逻辑
+            smartCrop(); 
+            // 注意：smartCrop 是异步带延时的，实际项目中最好把 smartCrop 封装成返回 Promise 的函数
+            // 这里为了稳健，建议用户先点击“智能拆分”，再点“一键去底”
+            // 如果必须自动触发，请确保 croppedImages 已生成
+            await new Promise(r => setTimeout(r, 100)); 
+        }
+
+        if (croppedImages.length === 0) {
+            alert('请先进行智能拆分！');
+            return;
+        }
+        
+        // 2. 批量处理图片
+        const processedImages = await Promise.all(croppedImages.map(async (img) => {
+            return processSingleImageBackground(img);
+        }));
+        
+        // 3. 更新结果
+        croppedImages = processedImages;
+        displayResults();
+        
+    } catch (error) {
+        console.error('Background removal error:', error);
+    } finally {
+        loading.style.display = 'none';
+        toggleButtons(false);
+    }
+}
+
+// 辅助函数：切换按钮状态
+function toggleButtons(disabled) {
+    const ids = ['cropBtn', 'manualCropBtn', 'downloadAllBtn'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.disabled = disabled;
+    });
+}
+
+// 处理单张图片的去底逻辑
+async function processSingleImageBackground(imgObj) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const image = new Image();
+    image.crossOrigin = "Anonymous";
+    
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = imgObj.dataURL;
+    });
+    
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx.drawImage(image, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // --- 1. 获取背景色 ---
+    const bgColor = detectBorderBackgroundColor(imageData);
+    
+    // --- 2. 核心去底 (泛洪填充) ---
+    // 这一步负责把大面积背景去掉
+    removeBackgroundFloodFill(imageData, bgColor); // 注意：把 bgColor 传进去，避免重复计算
+    
+    // --- 3. 新增：边缘净化 (消除杂边) ---
+    // tolerance 设为 60-80，比泛洪的容差大，专门对付边缘那些顽固的半透明像素
+    cleanEdges(imageData, bgColor, 60); 
+    
+    // --- 4. 新增：去除噪点 (消除角落残留) ---
+    // 小于 30 像素的独立小块会被删掉
+    removeSpeckles(imageData, 30);
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    return {
+        ...imgObj,
+        dataURL: canvas.toDataURL('image/png')
+    };
+}
+
+/**
+ * 核心去底算法：边缘采样 + 泛洪填充 (Flood Fill)
+ * 优点：保护物体内部颜色，只去除外部连通背景
+ */
+function removeBackgroundFloodFill(imageData, bgColor) {
+    const { width, height, data } = imageData;
+    const visited = new Uint8Array(width * height); // 标记已处理像素
+
+    // 2. 初始化队列，将图像四周的像素加入种子队列
+    const queue = [];
+    
+    // 定义容差 (0-255)，对于 JPG 压缩图，建议 20-40，PNG 原图可以 10
+    // 你之前的代码针对某特定颜色用了超大容差，这里我们使用动态容差
+    let tolerance = 30; 
+    
+    // 辅助：检查颜色是否匹配背景
+    function isMatch(idx) {
+        const r = data[idx], g = data[idx+1], b = data[idx+2], a = data[idx+3];
+        // 欧氏距离计算颜色差异
+        const diff = Math.sqrt(
+            Math.pow(r - bgColor.r, 2) + 
+            Math.pow(g - bgColor.g, 2) + 
+            Math.pow(b - bgColor.b, 2)
+        );
+        return diff <= tolerance && Math.abs(a - bgColor.a) <= tolerance;
+    }
+
+    // 扫描上下左右四条边
+    for (let x = 0; x < width; x++) {
+        addSeed(x, 0);            // Top
+        addSeed(x, height - 1);   // Bottom
+    }
+    for (let y = 0; y < height; y++) {
+        addSeed(0, y);            // Left
+        addSeed(width - 1, y);    // Right
+    }
+
+    function addSeed(x, y) {
+        const idx = (y * width + x);
+        if (visited[idx]) return;
+        
+        const pos = idx * 4;
+        if (isMatch(pos)) {
+            queue.push(idx);
+            visited[idx] = 1;
+        }
+    }
+    
+    // 3. 开始泛洪填充 (BFS)
+    // 只有与边缘背景连通的像素才会被变成透明
+    while (queue.length > 0) {
+        const currIdx = queue.shift();
+        const cx = currIdx % width;
+        const cy = Math.floor(currIdx / width);
+        
+        // 将当前像素设为透明
+        const pos = currIdx * 4;
+        data[pos] = 0;
+        data[pos+1] = 0;
+        data[pos+2] = 0;
+        data[pos+3] = 0;
+        
+        // 检查 4 邻域
+        const neighbors = [
+            {x: cx, y: cy - 1}, // Up
+            {x: cx, y: cy + 1}, // Down
+            {x: cx - 1, y: cy}, // Left
+            {x: cx + 1, y: cy}  // Right
+        ];
+        
+        for (let n of neighbors) {
+            if (n.x >= 0 && n.x < width && n.y >= 0 && n.y < height) {
+                const nIdx = n.y * width + n.x;
+                if (visited[nIdx] === 0) {
+                    const nPos = nIdx * 4;
+                    // 如果邻居颜色也接近背景色，加入队列继续腐蚀
+                    if (isMatch(nPos)) {
+                        visited[nIdx] = 1;
+                        queue.push(nIdx);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 优化后的背景色检测：只统计图片边缘一圈的像素
+ * 防止把物体主体颜色误判为背景
+ */
+function detectBorderBackgroundColor(imageData) {
+    const { width, height, data } = imageData;
+    const colorCounts = {};
+    let maxCount = 0;
+    let bestColor = { r: 0, g: 0, b: 0, a: 0 }; // 默认
+    
+    // 辅助统计函数
+    function countPixel(x, y) {
+        const i = (y * width + x) * 4;
+        const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+        
+        // 忽略已经完全透明的像素
+        if (a === 0) return;
+        
+        // 简单的量化键值 (降低精度以聚合相似颜色)
+        // 例如：将 255 种颜色压缩到 51 个桶，容忍噪点
+        const bin = 5; 
+        const key = `${Math.floor(r/bin)},${Math.floor(g/bin)},${Math.floor(b/bin)}`;
+        
+        if (!colorCounts[key]) {
+            colorCounts[key] = { count: 0, r, g, b, a };
+        }
+        colorCounts[key].count++;
+        
+        if (colorCounts[key].count > maxCount) {
+            maxCount = colorCounts[key].count;
+            bestColor = { r: colorCounts[key].r, g: colorCounts[key].g, b: colorCounts[key].b, a: colorCounts[key].a };
+        }
+    }
+    
+    // 扫描四条边
+    // 步长 step 可以设为 1，如果图很大可以设为 2 或 4 提高性能
+    const step = 1; 
+    
+    // Top & Bottom
+    for (let x = 0; x < width; x += step) {
+        countPixel(x, 0);
+        countPixel(x, height - 1);
+    }
+    // Left & Right
+    for (let y = 1; y < height - 1; y += step) {
+        countPixel(0, y);
+        countPixel(width - 1, y);
+    }
+    
+    return bestColor;
+}
+
+// 检测背景色（优化算法：分析整个图片的像素分布）
+function detectBackgroundColor(imageData) {
+    const { width, height, data } = imageData;
+    const colorCounts = {};
+    let maxCount = 0;
+    let mostCommonColor = { r: 255, g: 255, b: 255, a: 255 };
+    
+    // 分析整个图片的像素分布
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        
+        // 跳过完全透明的像素
+        if (a === 0) continue;
+        
+        const key = `${r},${g},${b}`; // 忽略alpha通道，只考虑RGB
+        colorCounts[key] = (colorCounts[key] || 0) + 1;
+        
+        if (colorCounts[key] > maxCount) {
+            maxCount = colorCounts[key];
+            mostCommonColor = { r, g, b, a };
+        }
+    }
+    
+    // 检查是否匹配常见背景色
+    for (const commonColor of commonBgColors) {
+        const key = `${commonColor.r},${commonColor.g},${commonColor.b}`;
+        if (colorCounts[key] && colorCounts[key] > maxCount * 0.5) {
+            return commonColor;
+        }
+    }
+    
+    return mostCommonColor;
+}
+
+// 检测两个颜色是否相似（优化版本）
+function isSimilarColor(r1, g1, b1, a1, r2, g2, b2, a2, tolerance) {
+    // 针对游戏素材的背景色，使用更宽松的阈值
+    if (r2 === 192 && g2 === 176 && b2 === 144) {
+        // 游戏素材常见浅棕色背景，使用更宽松的阈值
+        const colorDiff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+        return colorDiff < tolerance * 4;
+    }
+    
+    // 普通颜色比较
+    const colorDiff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+    const alphaDiff = Math.abs(a1 - a2);
+    return colorDiff < tolerance * 3 && alphaDiff < tolerance;
+}
+
+/**
+ * 后处理步骤1：边缘净化（腐蚀算法）
+ * 作用：扫描所有“不透明但接触透明区域”的边缘像素，如果颜色接近背景色，强制删除。
+ * 解决：图中的边缘杂色环
+ */
+function cleanEdges(imageData, bgColor, tolerance = 50) {
+    const { width, height, data } = imageData;
+    // 复制一份数据用于检测邻居，防止处理过程中影响判断
+    const oldData = new Uint8Array(data); 
+
+    let deletedCount = 0;
+    
+    // 辅助：获取某个位置的 alpha 值
+    const getAlpha = (x, y) => {
+        if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+        return oldData[(y * width + x) * 4 + 3];
+    };
+
+    // 辅助：计算颜色差异
+    const getColorDiff = (i) => {
+        const r = oldData[i], g = oldData[i+1], b = oldData[i+2];
+        return Math.sqrt(
+            Math.pow(r - bgColor.r, 2) + 
+            Math.pow(g - bgColor.g, 2) + 
+            Math.pow(b - bgColor.b, 2)
+        );
+    };
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // 只有当前像素不透明时才处理
+            if (oldData[idx + 3] > 0) {
+                // 检查 4 邻域是否有透明像素（说明这是边缘）
+                const isEdge = 
+                    getAlpha(x, y-1) === 0 ||
+                    getAlpha(x, y+1) === 0 ||
+                    getAlpha(x-1, y) === 0 ||
+                    getAlpha(x+1, y) === 0;
+
+                if (isEdge) {
+                    // 如果是边缘，且颜色还挺像背景的（使用比泛洪填充更大的容差），删掉！
+                    if (getColorDiff(idx) < tolerance) {
+                        data[idx + 3] = 0; // 变透明
+                        deletedCount++;
+                    }
+                }
+            }
+        }
+    }
+    // 如果处理了很多像素，说明边缘很脏，可以递归再洗一遍（可选）
+    // if (deletedCount > 0) cleanEdges(imageData, bgColor, tolerance); 
+}
+
+/**
+ * 后处理步骤2：去除孤立噪点（连通域过滤）
+ * 作用：如果有一团像素小于 N 个（比如小于20个像素），视为噪点直接删除
+ * 解决：图一图二角落里的那些残留小点
+ */
+function removeSpeckles(imageData, minSize = 20) {
+    const { width, height, data } = imageData;
+    const visited = new Uint8Array(width * height);
+    
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = y * width + x;
+            
+            // 如果该像素不透明且未访问，开始计算这个物体的面积
+            if (data[idx * 4 + 3] > 0 && visited[idx] === 0) {
+                const queue = [idx];
+                visited[idx] = 1;
+                const componentIndices = [idx]; // 记录这个物体包含的所有像素索引
+                
+                let ptr = 0;
+                while(ptr < queue.length) {
+                    const curr = queue[ptr++];
+                    const cx = curr % width;
+                    const cy = Math.floor(curr / width);
+                    
+                    // 8邻域搜索（连在一起就算一个物体）
+                    const neighbors = [
+                        [-1,-1], [0,-1], [1,-1],
+                        [-1, 0],         [1, 0],
+                        [-1, 1], [0, 1], [1, 1]
+                    ];
+                    
+                    for(let n of neighbors) {
+                        const nx = cx + n[0];
+                        const ny = cy + n[1];
+                        if(nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            const nIdx = ny * width + nx;
+                            // 如果邻居不透明且未访问
+                            if(data[nIdx * 4 + 3] > 0 && visited[nIdx] === 0) {
+                                visited[nIdx] = 1;
+                                queue.push(nIdx);
+                                componentIndices.push(nIdx);
+                            }
+                        }
+                    }
+                }
+                
+                // 核心逻辑：如果这个物体太小（比如只是角落的几个噪点），全部抹除
+                if (componentIndices.length < minSize) {
+                    for (let i of componentIndices) {
+                        data[i * 4 + 3] = 0; // 设为透明
+                    }
+                }
+            }
+        }
+    }
 }
 
 // 手动拆分

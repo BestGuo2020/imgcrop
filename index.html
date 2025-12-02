@@ -228,6 +228,26 @@
         .btn-outline { background: white; border: 1px solid #e5e7eb; color: var(--text-main); }
         .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f9fafb; }
 
+        /* 下拉菜单样式 */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-toggle::after { content: '▼'; margin-left: 8px; font-size: 0.7rem; transition: transform 0.2s; }
+        .dropdown-toggle:hover::after { transform: scale(1.1); }
+        .dropdown-menu {
+            position: absolute; top: 100%; left: 0; margin-top: 5px;
+            background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb; min-width: 120px; z-index: 1000;
+            opacity: 0; visibility: hidden; transform: translateY(-5px); transition: all 0.2s ease;
+        }
+        .dropdown.show .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-item {
+            display: block; width: 100%; padding: 10px 15px;
+            text-align: left; border: none; background: none; cursor: pointer;
+            font-size: 0.95rem; color: var(--text-main); transition: all 0.2s;
+            border-radius: 6px; margin: 2px 4px;
+        }
+        .dropdown-item:hover { background: var(--primary); color: white; }
+        .dropdown-item:active { transform: scale(0.98); }
+
         /* Features */
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 50px; }
         .feature-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: transform 0.3s; border: 1px solid rgba(0,0,0,0.03); }
@@ -335,7 +355,13 @@
 
             <!-- 按钮组 -->
             <div class="controls-section">
-                <button class="btn btn-primary" id="cropBtn" disabled>⚡ 智能拆分</button>
+                <!-- 智能拆分 + 下拉菜单 -->
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" id="cropBtn" disabled>⚡ 智能拆分</button>
+                    <div class="dropdown-menu" id="cropDropdown">
+                        <button class="dropdown-item" id="bgRemoveBtn">一键去底</button>
+                    </div>
+                </div>
                 <button class="btn btn-outline" id="manualCropBtn" disabled>🖐 手动拆分</button>
                 <button class="btn btn-outline" id="downloadAllBtn" disabled>📥 打包下载</button>
                 <button class="btn btn-outline" id="resetBtn" disabled>🔄 重置</button>
