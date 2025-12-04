@@ -59,6 +59,8 @@ const i18n = {
         'faq.a5': '这是由于原图的“抗锯齿”处理或JPG压缩导致的半透明过渡像素。为了防止误删物体本身的细节（如头发、眼睛），算法会保留这些边缘。对于高精度需求，建议使用专业PS软件微调。',
         'faq.q6': '相比下载桌面软件，使用在线工具有什么优势？',
         'faq.a6': '跨平台：无论 Windows/Mac/iPad，打开浏览器即用。<br>零安装：无病毒风险，无需配置环境。<br>隐私保护：利用 WebAssembly 技术，图片仅在本地浏览器内存中处理，不上传云端，断网也能用。',
+        'faq.q7': '图片裁切时原素材被削减或抠没了，怎么办？',
+        'faq.a7': '这种情况通常发生在使用"一键去底"功能时，尤其是当素材边缘与背景颜色相近时。建议您尝试使用"先去底再拆分"功能，该功能会先对整图进行去底处理，再进行智能拆分，能更好地保留素材的完整性和细节。',
         
         'copyright': '© 2025 智能图片素材拆分工具. 保留所有权利.',
         'alert.image': '请上传图片文件！',
@@ -125,6 +127,8 @@ const i18n = {
         'faq.a5': 'This is caused by anti-aliasing or JPG compression artifacts. To prevent deleting object details, the algorithm preserves these transition pixels.',
         'faq.q6': 'Advantages over desktop software?',
         'faq.a6': 'Cross-platform: Works on Windows, Mac, or iPad via browser. <br>Zero Install: No complex config or virus risks. <br>Privacy: Uses WebAssembly for local processing; images remain in your browser memory and are never uploaded, working even offline.',
+        'faq.q7': 'What to do if the original material is cut off or lost during cropping?',
+        'faq.a7': 'This usually happens when using the "Remove Background" function, especially when the material edges are close to the background color. We recommend trying the "Remove BG Then Split" function, which first removes the background from the entire image and then performs intelligent splitting, better preserving the integrity and details of the material.',
 
         'copyright': '© 2025 Smart Image Splitter. All Rights Reserved.',
         'alert.image': 'Please upload an image file!',
@@ -191,6 +195,8 @@ const i18n = {
         'faq.a5': 'アンチエイリアス処理やJPG圧縮による半透明ピクセルが原因です。物体の細部（目や髪など）を保護するため、これらは保持されます。',
         'faq.q6': 'デスクトップソフトと比較した利点は？',
         'faq.a6': 'マルチプラットフォーム：Windows/Mac/iPadなど、ブラウザがあれば即座に使えます。<br>インストール不要：ウイルスリスクや設定の手間がありません。<br>プライバシー保護：WebAssembly技術により、画像はローカルメモリ内でのみ処理され、サーバーには送信されません。<br>オフラインでも動作します。',
+        'faq.q7': '画像を切り抜くと元の素材が削られたり消えたりするのはなぜですか？',
+        'faq.a7': 'これは主に「背景除去」機能を使用した場合に発生し、特に素材のエッジと背景色が近い場合に顕著です。「背景除去後分割」機能をお試しください。この機能はまず全体の画像から背景を削除し、その後にスマート分割を行うため、素材の完全性と詳細をより良く保持できます。',
         
         'copyright': '© 2025 Smart Image Splitter. All Rights Reserved.',
         'alert.image': '画像ファイルをアップロードしてください！',
@@ -256,6 +262,8 @@ const i18n = {
         'faq.a5': '안티앨리어싱 처리나 JPG 압축 노이즈 때문입니다. 객체의 디테일을 보호하기 위해 알고리즘은 이러한 가장자리를 보존합니다.',
         'faq.q6': '데스크톱 소프트웨어보다 나은 점은 무엇인가요?',
         'faq.a6': '크로스 플랫폼: Windows, Mac, iPad 어디서든 브라우저만 열면 됩니다. <br>설치 불필요: 바이러스 위험이나 복잡한 설정이 없습니다. <br>개인정보 보호: WebAssembly 기술을 사용하여 이미지가 로컬 브라우저 메모리에서만 처리되며, 서버로 전송되지 않습니다. 오프라인에서도 작동합니다.',
+        'faq.q7': '이미지 자르기 중 원본 재료가 잘려나가거나 사라졌어요. 어떻게 해야 하나요?',
+        'faq.a7': '이런 경우는 주로 "배경 제거" 기능을 사용할 때 발생하며, 특히 재료의 가장자리가 배경색과 유사할 때 더 자주 발생합니다. "배경 제거 후 분할" 기능을 사용해 보세요. 이 기능은 전체 이미지에서 먼저 배경을 제거한 후 스마트 분할을 수행하므로, 재료의 완전성과 세부 사항을 더 잘 유지할 수 있습니다.',
         
         'copyright': '© 2025 Smart Image Splitter. All Rights Reserved.',
         'alert.image': '이미지 파일을 업로드해주세요!',
@@ -626,6 +634,7 @@ function applyI18n() {
     setText('.q4', 'faq.q4'); setText('.a4', 'faq.a4');
     setText('.q5', 'faq.q5'); setText('.a5', 'faq.a5');
     setText('.q6', 'faq.q6'); setText('.a6', 'faq.a6');
+    setText('.q7', 'faq.q7'); setText('.a7', 'faq.a7');
 
     // 页脚
     setText('.copyright', 'copyright');
