@@ -242,6 +242,20 @@ for (const lang of langs) {
   checkTrue(`保留了 JS 入口（${lang}）`, /<script[^>]+type="module"[^>]+src="[^"]+"/.test(html));
 }
 
+// 站上不允许再出现任何第三方脚本（原 Adsterra 系的两个 invoke.js 已随 AdSlot.vue 一起删除）。
+// 用「结构 + 已知域名」双重断言：广告标签用的是各家自己的域名，按品牌名搜代码是搜不到的。
+const AD_DOMAIN_RE =
+  /5gvci|nap5k|n6wxm|monetag|moneytag|adsterra|propellerads|effectivecpm|highperformanceformat|invoke\.js|adsbygoogle|tag\.min\.js|vignette\.min\.js/i;
+
+for (const lang of langs) {
+  // 在「剥掉 HTML 注释」的文本上检查：index.html 里解释广告历史的注释本身就带着这些关键词，
+  // 不剥注释就会把自己的说明当成命中（这个坑已经踩过一次）。
+  const code = pages[lang].replace(/<!--[\s\S]*?-->/g, ' ');
+  const external = code.match(/<script\b[^>]*\bsrc="https?:\/\/[^"]+"/gi) || [];
+  check(`无外部脚本标签（${lang}）`, external.length, 0);
+  check(`无已知广告联盟域名（${lang}）`, AD_DOMAIN_RE.test(code), false);
+}
+
 // _redirects：语言路径必须显式路由到各自的壳，且**不能**有 catch-all。
 // 背景：Pages 在没有顶层 404.html 时自带 SPA 回退（深链会回落到根页），所以
 // `/*  /index.html  200` 是多余的；而它一旦生效，就可能把 /assets/*.js、/robots.txt、

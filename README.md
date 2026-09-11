@@ -152,11 +152,14 @@ curl.exe -s -A "Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)
 
 ## 已知问题与待办
 
-- **广告与隐私主张冲突（仍未解决）**：`src/HomePage.vue` 里通过 `AdSlot.vue` 挂了两个第三方广告脚本
-  （`effectivecpmnetwork` / `highperformanceformat` 的 `invoke.js`，Adsterra 系），而页面主张是
-  「图片不上传、隐私级安全」。这类网络的素材质量不可控（假下载按钮之类），放在一个让用户下载文件的工具站上
-  既不诚信也有安全/账号风险。只有两个干净的选择：撤掉这两个脚本，或者按 `video-frame-extractor` 的做法
-  把隐私文案改成「永远可验证为真」的版本（页脚只留本地处理与不上传，数据边界写进 FAQ）。
+- **第三方广告已全部撤掉**：`src/HomePage.vue` 曾挂两个 Adsterra 系脚本（`effectivecpmnetwork` /
+  `highperformanceformat` 的 `invoke.js`），已连同组件 `src/components/AdSlot.vue` 一起删除。
+  理由：这类自助联盟的需求端是套利广告主与内容农场，素材不可控（会劫持页面上任意点击、跳转到内容套利页），
+  与本站「图片不上传、隐私级安全」的主张直接冲突，还会挡住以后申请 AdSense 的路 —— 而 0–1 万 PV 的工具站
+  靠它每月只有个位数美元，不值得拿唯一的护城河去换。
+  站上现在只保留 `src/analytics.js`（Cloudflare Web Analytics，无 Cookie；token 留空则连它也不加载）。
+  将来要接广告：优先 AdSense / AdX，并按 `video-frame-extractor` README 里的规则把隐私文案改成
+  「永远可验证为真」的版本（页脚只留本地处理与不上传，数据边界写进 FAQ）。
 - **`ads.txt` 已删除**：它此前声明了 Google 的卖方 ID（`google.com, pub-857642…`），但本站从未接入 AdSense。
   ads.txt 是「授权卖方」声明，写着并不存在的关系只会误导买方与审核方；Adsterra 系并不要求 ads.txt。
   将来真的接入 AdSense / AdX 时再加回来。删除后 `/ads.txt` 会走 Pages 的 SPA 回退返回 HTML ——

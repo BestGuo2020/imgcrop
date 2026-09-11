@@ -117,8 +117,8 @@
       改文案请改 src/i18n.js（文案唯一来源）。
 
       Vue 挂载时会把 #app 的子节点整体替换为组件渲染结果，因此这段内容不会与组件重复出现在 DOM 里。
-      广告位不放在这里——它们由 src/components/AdSlot.vue 在挂载后注入，
-      否则 Vue 替换子节点时会连同第三方广告 iframe 一起销毁。
+      （这里曾经解释过「广告位为什么不放进静态回退正文」—— 站上现在没有广告了：2026 年撤掉全部第三方
+      广告脚本，只保留无 Cookie 的 Cloudflare Web Analytics。要接广告请从 git 历史取回 AdSlot.vue。）
     -->
     <div id="app">
         <!-- static-fallback:start —— prerender 按语言替换这一整段，标记本身不要删也不要改 -->

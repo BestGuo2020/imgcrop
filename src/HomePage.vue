@@ -21,7 +21,6 @@ import FeatureGrid from './components/FeatureGrid.vue';
 import SeoContent from './components/SeoContent.vue';
 import FaqSection from './components/FaqSection.vue';
 import AppFooter from './components/AppFooter.vue';
-import AdSlot from './components/AdSlot.vue';
 
 import { i18n, setLang } from './i18n.js';
 import { applySeoMeta } from './seo.js';
@@ -42,27 +41,12 @@ const t = (key) => i18n.t(key);
 /** 旧代码里「画布不可用」这句错误文案，保持原样 */
 const CANVAS_UNAVAILABLE = '画布不可用';
 
-// ---------- 广告位配置（与迁移前 index.html 中的两处一致，参数未改动）----------
-const AD_IN_TOOL = {
-  containerId: 'container-523f197c5f53697564ba236d80e6d1e4',
-  scriptSrc: 'https://pl30589912.effectivecpmnetwork.com/523f197c5f53697564ba236d80e6d1e4/invoke.js',
-  cfAsyncFalse: true,
-  async: true,
-  minHeight: '0px',
-};
-
-const AD_MIDDLE = {
-  atOptions: {
-    key: '3c3c6ac5cb8ae25bdfc8f03d0415c9b2',
-    format: 'iframe',
-    height: 90,
-    width: 728,
-    params: {},
-  },
-  scriptSrc: 'https://www.highperformanceformat.com/3c3c6ac5cb8ae25bdfc8f03d0415c9b2/invoke.js',
-  async: false,
-  minHeight: '90px',
-};
+// ---------- 关于广告 ----------
+// 这里曾经挂两个第三方广告位（Adsterra 系的 effectivecpmnetwork / highperformanceformat），
+// 已全部撤掉，组件 src/components/AdSlot.vue 也一并删除。原因：这类自助联盟的需求端是套利与
+// 内容农场，素材不可控（会劫持页面上任意点击、跳转到内容套利页），与本站「图片不上传、隐私级安全」
+// 的主张直接冲突，还会挡住以后申请 AdSense 的路；而 0–1 万 PV 的工具站靠它每月只有个位数美元。
+// 要恢复请从 git 历史里取回 AdSlot.vue；接广告请优先走 AdSense/AdX，并同步核对隐私文案。
 
 // ---------- 状态 ----------
 const stage = ref(null);
@@ -318,15 +302,6 @@ onMounted(async () => {
         <!-- 进度条 -->
         <ProgressPanel v-if="progress.visible" :percent="progress.percent" :text="progress.text" />
 
-        <!-- 工具内广告位 -->
-        <AdSlot
-          :container-id="AD_IN_TOOL.containerId"
-          :script-src="AD_IN_TOOL.scriptSrc"
-          :cf-async-false="AD_IN_TOOL.cfAsyncFalse"
-          :async="AD_IN_TOOL.async"
-          :min-height="AD_IN_TOOL.minHeight"
-        />
-
         <!-- 拆分结果 -->
         <ResultGrid
           v-if="hasResults"
@@ -335,14 +310,6 @@ onMounted(async () => {
           @delete="onDeleteOne"
         />
       </div>
-
-      <!-- 中部广告位 -->
-      <AdSlot
-        :at-options="AD_MIDDLE.atOptions"
-        :script-src="AD_MIDDLE.scriptSrc"
-        :async="AD_MIDDLE.async"
-        :min-height="AD_MIDDLE.minHeight"
-      />
 
       <FeatureGrid />
       <SeoContent />
