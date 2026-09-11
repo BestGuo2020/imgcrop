@@ -5,8 +5,9 @@
 
   怎么渲染（浏览器不接受 file://，必须走 http，所以借用项目自己的 dev server）：
       pnpm dev            # Vite 会把这个文件当作 HTML 入口提供
-      浏览器打开 http://localhost:5173/tools/og-card.html
+      浏览器打开 http://127.0.0.1:5175/tools/og-card.html
       截图（1280×720 整个视口）→ 覆盖 public/og.png → 清掉它的只读属性
+  端口 5175 是 vite.config.js 里写死的（避开 mpwx 的 5173；被占用时仍会顺延，以终端输出为准）。
   没有 dev server 时用任意静态服务器托管项目根目录也可以：pnpm dlx serve .
 
   尺寸为什么是 1280×720 而不是「标准」的 1200×630：无头浏览器的视口固定 1280×720，

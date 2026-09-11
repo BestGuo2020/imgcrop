@@ -94,12 +94,13 @@ asset matches the incoming request」，一旦它生效就可能把 `/assets/*.j
 重新生成：浏览器不接受 `file://`，所以借项目自己的 dev server ——
 
 ```bash
-pnpm dev    # 然后打开 http://localhost:5173/tools/og-card.html
+pnpm dev    # 然后打开 http://127.0.0.1:5175/tools/og-card.html
 ```
 
-截取整个 1280×720 视口，覆盖 `public/og.png`（记得清掉它的只读属性）。没有 dev server 时，
-用任意静态服务器托管项目根目录也行（`pnpm dlx serve .`）。同样的话写在 `tools/og-card.html` 顶部，
-所以那个文件本身就是自包含的操作说明。
+端口是 `vite.config.js` 里写死的 **5175**（不是 Vite 默认的 5173 —— 那样会和 mpwx-video-getter 撞车；
+被占用时仍会顺延，所以以终端输出为准）。截取整个 1280×720 视口，覆盖 `public/og.png`（记得清掉它的
+只读属性）。没有 dev server 时，用任意静态服务器托管项目根目录也行（`pnpm dlx serve .`）。
+同样的话写在 `tools/og-card.html` 顶部，所以那个文件本身就是自包含的操作说明。
 
 历史问题：og:image 曾经是 `data:image/svg+xml,...` —— X / Facebook / Slack / Discord 与各家 AI 抓取
 一律不认 data: URI，分享出去没有卡片。
