@@ -3,6 +3,12 @@
   这张卡片只在「生成 og:image」时用：用浏览器把本页渲染出来截图为 public/og.png。
   它不是站点页面，也不会被构建打包（放在 tools/ 下，vite 只打 public/ 与 index.html）。
 
+  怎么渲染（浏览器不接受 file://，必须走 http，所以借用项目自己的 dev server）：
+      pnpm dev            # Vite 会把这个文件当作 HTML 入口提供
+      浏览器打开 http://localhost:5173/tools/og-card.html
+      截图（1280×720 整个视口）→ 覆盖 public/og.png → 清掉它的只读属性
+  没有 dev server 时用任意静态服务器托管项目根目录也可以：pnpm dlx serve .
+
   尺寸为什么是 1280×720 而不是「标准」的 1200×630：无头浏览器的视口固定 1280×720，
   截图就是视口大小，而本地没有图像裁剪依赖（不值得为它引入 sharp/canvas）。
   og:image 的硬要求是「宽度 ≥1200 且尽量接近 1.91:1」，16:9 按 1.91:1 显示时上下各裁 ~25px，

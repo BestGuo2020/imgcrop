@@ -91,8 +91,15 @@ asset matches the incoming request」，一旦它生效就可能把 `/assets/*.j
 固定为该尺寸，而仓库不引入 sharp/canvas 这类裁剪依赖；16:9 在按 1.91:1 展示时上下各裁约 25px，正文距边缘
 84px，裁不到内容。**声明值与文件真实尺寸必须一致**，否则平台不渲染。
 
-重新生成：`node ../tools/og-card-server.mjs 8791`，浏览器打开
-`http://127.0.0.1:8791/imgcrop/tools/og-card.html` 截图，覆盖 `public/og.png`（记得清掉文件只读属性）。
+重新生成：浏览器不接受 `file://`，所以借项目自己的 dev server ——
+
+```bash
+pnpm dev    # 然后打开 http://localhost:5173/tools/og-card.html
+```
+
+截取整个 1280×720 视口，覆盖 `public/og.png`（记得清掉它的只读属性）。没有 dev server 时，
+用任意静态服务器托管项目根目录也行（`pnpm dlx serve .`）。同样的话写在 `tools/og-card.html` 顶部，
+所以那个文件本身就是自包含的操作说明。
 
 历史问题：og:image 曾经是 `data:image/svg+xml,...` —— X / Facebook / Slack / Discord 与各家 AI 抓取
 一律不认 data: URI，分享出去没有卡片。
