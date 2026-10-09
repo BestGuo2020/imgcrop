@@ -68,7 +68,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = join(projectRoot, 'dist');
 
 const { i18n } = await import('../src/i18n.js');
-const { SEO_PAGES, HREFLANG_LINKS, OG_IMAGE, FAQ_ITEMS, pageUrl } = await import('../src/seo-pages.js');
+const { SEO_PAGES, HREFLANG_LINKS, OG_IMAGE, FAQ_ITEMS, SITE_ORIGIN, pageUrl } = await import('../src/seo-pages.js');
 
 let failures = 0;
 let checks = 0;
@@ -281,6 +281,23 @@ if (existsSync(redirectsPath)) {
 
 // 退役的边缘改写不能残留在产物里
 checkTrue('dist/_worker.js 已移除', !existsSync(join(distDir, '_worker.js')));
+
+// 隐私入口必须在不执行 JS 时可发现，并指向真实的独立静态页。
+checkTrue('隐私页样式存在', existsSync(join(distDir, 'privacy/style.css')));
+for (const lang of langs) {
+  i18n.lang = lang;
+  const policyPath = i18n.t('privacy.href');
+  checkTrue(`静态页脚有隐私入口（${lang}）`, pages[lang].includes(`href="${policyPath}"`));
+  const file = join(distDir, policyPath.slice(1), 'index.html');
+  checkTrue(`隐私页存在（${lang}）`, existsSync(file));
+  if (!existsSync(file)) continue;
+  const policy = readFileSync(file, 'utf8');
+  check(`隐私页语言（${lang}）`, (policy.match(/<html\b[^>]*\blang="([^"]*)"/) || [])[1], SEO_PAGES[lang].htmlLang);
+  checkTrue(`隐私页 canonical（${lang}）`, policy.includes(`rel="canonical" href="${SITE_ORIGIN}${policyPath}"`));
+  checkTrue(`隐私页包含 Google 退出入口（${lang}）`, policy.includes('href="https://myadcenter.google.com/"'));
+  checkTrue(`隐私页包含第三方退出入口（${lang}）`, policy.includes('href="https://www.aboutads.info/choices/"'));
+  checkTrue(`隐私页不加载脚本（${lang}）`, !/<script\b/i.test(policy));
+}
 
 console.log(
   `\n[verify-prerender] ${checks} 项断言，${failures === 0 ? '全部通过' : `${failures} 项失败`}`

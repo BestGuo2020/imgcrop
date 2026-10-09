@@ -8,6 +8,8 @@ import { reactive } from 'vue';
 
 const messages = {
     'zh-CN': {
+        'privacy.label': '隐私政策',
+        'privacy.href': '/privacy/',
         'nav.home': '首页', 'nav.features': '功能', 'nav.faq': '常见问题', 'nav.scene': '场景',
         'title': '智能图片素材拆分工具 - 一键将拼图切分为多个PNG文件',
         'subtitle': '一键将包含多个元素的图片自动拆分为单独的PNG文件，支持批量处理',
@@ -84,6 +86,8 @@ const messages = {
         ]
     },
     'en': {
+        'privacy.label': 'Privacy Policy',
+        'privacy.href': '/privacy/en/',
         'nav.home': 'Home', 'nav.features': 'Features', 'nav.faq': 'FAQ', 'nav.scene': 'Use Cases',
         'title': 'Smart Image Splitter - Auto Crop & Extract Sprites Online',
         'subtitle': 'Automatically split images containing multiple elements into separate PNG files.',
@@ -153,6 +157,8 @@ const messages = {
         ]
     },
     'ja': {
+        'privacy.label': 'プライバシーポリシー',
+        'privacy.href': '/privacy/ja/',
         'nav.home': 'ホーム', 'nav.features': '機能', 'nav.faq': 'FAQ', 'nav.scene': '利用シーン',
         'title': '画像自動分割ツール - スプライトシートや素材を一括切り抜き',
         'subtitle': '複数の要素を含む画像を自動的に個別のPNGファイルに分割します',
@@ -221,6 +227,8 @@ const messages = {
         ]
     },
     'ko': {
+        'privacy.label': '개인정보 처리방침',
+        'privacy.href': '/privacy/ko/',
         'nav.home': '홈', 'nav.features': '기능', 'nav.faq': 'FAQ', 'nav.scene': '사용 사례',
         'title': '스마트 이미지 분할 도구 - 스프라이트 및 사진 자동 자르기',
         'subtitle': '여러 요소가 포함된 이미지를 개별 PNG 파일로 자동 분할합니다.',

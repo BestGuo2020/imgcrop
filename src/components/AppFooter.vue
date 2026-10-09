@@ -11,6 +11,7 @@ const t = (key) => i18n.t(key);
 <template>
   <footer>
     <p class="copyright">{{ t('copyright') }}</p>
+    <a :href="t('privacy.href')">{{ t('privacy.label') }}</a>
   </footer>
 </template>
 
@@ -25,5 +26,15 @@ footer {
 
 .copyright {
   margin: 0;
+}
+
+a {
+  color: #176742;
+  text-underline-offset: 3px;
+}
+
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
 }
 </style>

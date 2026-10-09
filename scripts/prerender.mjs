@@ -267,6 +267,7 @@ ${faq}
 
                 <footer>
                     <p>${escapeText(t('copyright'))}</p>
+                    <a href="${escapeAttr(t('privacy.href'))}">${escapeText(t('privacy.label'))}</a>
                 </footer>
             </div>`;
 }
@@ -297,6 +298,8 @@ const BODY_KEYS = [
   'faq.title',
   ...FAQ_ITEMS.flatMap(({ q, a }) => [q, a]),
   'copyright',
+  'privacy.label',
+  'privacy.href',
 ];
 
 /**
