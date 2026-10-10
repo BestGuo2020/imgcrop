@@ -24,5 +24,5 @@ applySeoMeta(i18n.lang);
 createApp(App).mount('#app');
 
 // 埋点放在挂载之后：它对首屏没有任何影响，而只有挂载成功才算一次真实访问。
-// 没配 token 时 initAnalytics() 直接返回，不会产生任何第三方请求（见 src/analytics.js）。
+// 没配 token 时本模块直接返回；GA4 已在 index.html 初始化（见 src/analytics.js）。
 initAnalytics();

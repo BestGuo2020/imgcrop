@@ -15,6 +15,27 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runInNewContext } from 'node:vm';
+
+const GA_SCRIPT_URL = 'https://www.googletagmanager.com/gtag/js?id=G-2PMNQJPWBM';
+
+function verifyGoogleTag(label, html) {
+  const head = html.replace(/<!--[\s\S]*?-->/g, ' ').match(/<head>([\s\S]*?)<\/head>/i)?.[1] || '';
+  const scripts = [...head.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+  const loaders = scripts.filter(([, attrs]) => attrs.includes(`src="${GA_SCRIPT_URL}"`));
+  checkTrue(`${label} GA 异步脚本仅加载一次`, loaders.length === 1 && /\basync\b/.test(loaders[0][1]));
+  const initializers = scripts.filter(([, attrs, body]) => !/\bsrc=/.test(attrs) && body.includes('gtag('));
+  check(`${label} GA 初始化仅执行一次`, initializers.length, 1);
+  try {
+    const context = {};
+    context.window = context;
+    runInNewContext(initializers[0]?.[2] || '', context, { timeout: 1000 });
+    const commands = context.dataLayer?.map(command => Array.from(command)) || [];
+    checkTrue(`${label} GA 测量 ID 与初始化正确`, commands.length === 2 && commands[0][0] === 'js' && commands[1][0] === 'config' && commands[1][1] === 'G-2PMNQJPWBM');
+  } catch (error) {
+    checkTrue(`${label} GA 初始化可执行`, false, error.message);
+  }
+}
 
 // 与 prerender.mjs 相同的假 DOM：读 src/i18n.js 需要它
 function makeNode(tag) {
@@ -242,7 +263,7 @@ for (const lang of langs) {
   checkTrue(`保留了 JS 入口（${lang}）`, /<script[^>]+type="module"[^>]+src="[^"]+"/.test(html));
 }
 
-// 站上不允许再出现任何第三方脚本（原 Adsterra 系的两个 invoke.js 已随 AdSlot.vue 一起删除）。
+// 只允许指定的 GA4 外部脚本；原 Adsterra 系的两个 invoke.js 已随 AdSlot.vue 一起删除。
 // 用「结构 + 已知域名」双重断言：广告标签用的是各家自己的域名，按品牌名搜代码是搜不到的。
 const AD_DOMAIN_RE =
   /5gvci|nap5k|n6wxm|monetag|moneytag|adsterra|propellerads|effectivecpm|highperformanceformat|invoke\.js|adsbygoogle|tag\.min\.js|vignette\.min\.js/i;
@@ -252,7 +273,9 @@ for (const lang of langs) {
   // 不剥注释就会把自己的说明当成命中（这个坑已经踩过一次）。
   const code = pages[lang].replace(/<!--[\s\S]*?-->/g, ' ');
   const external = code.match(/<script\b[^>]*\bsrc="https?:\/\/[^"]+"/gi) || [];
-  check(`无外部脚本标签（${lang}）`, external.length, 0);
+  const unexpected = external.filter(tag => !tag.endsWith(`src="${GA_SCRIPT_URL}"`));
+  check(`无未授权的外部脚本标签（${lang}）`, unexpected.length, 0);
+  verifyGoogleTag(lang, code);
   check(`无已知广告联盟域名（${lang}）`, AD_DOMAIN_RE.test(code), false);
 }
 
@@ -296,7 +319,9 @@ for (const lang of langs) {
   checkTrue(`隐私页 canonical（${lang}）`, policy.includes(`rel="canonical" href="${SITE_ORIGIN}${policyPath}"`));
   checkTrue(`隐私页包含 Google 退出入口（${lang}）`, policy.includes('href="https://myadcenter.google.com/"'));
   checkTrue(`隐私页包含第三方退出入口（${lang}）`, policy.includes('href="https://www.aboutads.info/choices/"'));
-  checkTrue(`隐私页不加载脚本（${lang}）`, !/<script\b/i.test(policy));
+  check(`隐私页仅加载 GA 脚本（${lang}）`, (policy.match(/<script\b/gi) || []).length, 2);
+  verifyGoogleTag(`隐私页 ${lang}`, policy);
+  checkTrue(`隐私页说明 GA Cookie（${lang}）`, policy.includes('Google Analytics 4'));
 }
 
 console.log(

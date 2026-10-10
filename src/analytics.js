@@ -1,13 +1,9 @@
-// src/analytics.js — 站点埋点（Cloudflare Web Analytics）
-//
-// 为什么选它而不是 GA4：
-//   1. 无 Cookie、不采集个人数据，与本站「图片不上传、纯本地处理」的隐私主张不冲突，
-//      也不需要为它加 Cookie 同意横幅（欧洲流量不会因此掉转化）；
-//   2. 免费、无需自建服务，脚本由一个 <script defer> 注入，不阻塞首屏。
+// src/analytics.js — 可选的 Cloudflare Web Analytics
+// Google Analytics 4 在 index.html 中初始化，并随预渲染覆盖所有语言页面。
 //
 // 怎么启用：在 Cloudflare 控制台 → Web Analytics 添加站点，拿到 token 后填到下面的
 // CF_BEACON_TOKEN。留空时本模块不做任何事（不会请求任何第三方域名），
-// 也就是说「没配 token」和「没有埋点」是同一种状态，不会给页面留下一个失败请求。
+// 未配置 token 只表示不启用 Cloudflare 统计，不影响 Google Analytics 4。
 //
 // 为什么必须补埋点：出海是「关键词 → 落地页 → 留存」的循环，没有数据就没法判断
 // 哪个语言的页面有效、哪条长尾词带来了转化。
